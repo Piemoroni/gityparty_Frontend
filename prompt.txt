@@ -1,0 +1,230 @@
+Faça Um site  tela listando os eventos, na tela home assim que clicar nele vai para uma segunda tela mostrando os dados do evento, necessário ter cards na primeira tela com
+titulo do evento, além de um botão para cadastrar e listar eventos (fora do card) como um cabeçalho, assim que clicar no card do evento, abrindo um modal para segunda tela mostrando todos os dados, dando para adicionar foto e ver todas as informações faltantes, quero um site clean com as cores vinho e bem intuitivo, o publico alvo é para o funcionário secretario que planeja e marca os eventos, seu roda pé deve conter: Feito com (coração) por Pietra Moroni, minha referencia é https://www.hotjar.com/_next/image/?url=https%3A%2F%2Fimages.ctfassets.net%2Flh3zuq09vnm2%2F6FdHOZHJKvrlc1dAWXdqlu%2F2e83c3b20cb1af6f42d99b4b8439d5eb%2F05_Shopify.jpg&w=946&q=75; use como base esse schema do banco de dados:
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Usuarios {
+  id            Int          @id @default(autoincrement())
+  nome          String
+  email         String
+  senha         String
+  data_cadastro DateTime     @default(now())
+  inscricoes    Inscricoes[]
+}
+
+model Eventos {
+  id                Int          @id @default(autoincrement())
+  titulo            String
+  descricao         String
+  data_evento       DateTime
+  local             String
+  capacidade_maxima Int
+  status            StatusEvento @default(ATIVO)
+  inscricoes        Inscricoes[]
+  imagens           Imagem[]
+}
+
+enum StatusEvento {
+  ATIVO
+  CANCELADO
+  ENCERRADO
+}
+
+model Inscricoes {
+  id             Int             @id @default(autoincrement())
+  data_inscricao DateTime        @default(now())
+  status         StatusInscricao @default(CONFIRMADA)
+
+  usuarios   Usuarios @relation(fields: [usuariosId], references: [id])
+  usuariosId Int
+  eventos    Eventos  @relation(fields: [eventosId], references: [id])
+  eventosId  Int
+}
+
+enum StatusInscricao {
+  CANCELADA
+  CONFIRMADA
+  LISTA_ESPERA
+}
+
+model Imagem {
+  id           Int      @id @default(autoincrement())
+  nomeOriginal String
+  nomeArquivo  String
+  mimeType     String
+  path         String
+  data         DateTime @default(now())
+  eventos      Eventos  @relation(fields: [eventosId], references: [id])
+  eventosId    Int
+}
+
+eventos controller = 
+const prisma = require("../data/prisma");
+const { encerrarEvento, podeExcluirEvento } = require("../services/inscricoes.services");
+
+const cadastrar = async (req, res) => {
+    try {
+        const data = req.body;
+
+        data.data_evento = new Date(data.data_evento);
+
+        const item = await prisma.eventos.create({ data });
+
+        res.status(201).json(item);
+
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+const listar = async (req, res) => {
+    const lista = await prisma.eventos.findMany();
+    res.status(200).json(lista);
+};
+
+const buscar = async (req, res) => {
+    const { id } = req.params;
+
+    const item = await prisma.eventos.findUnique({
+        where: { id: Number(id) }
+    });
+
+    res.status(200).json(item);
+};
+
+const atualizar = async (req, res) => {
+    const { id } = req.params;
+    const dados = req.body;
+
+    try {
+        const item = await prisma.eventos.update({
+            where: { id: Number(id) },
+            data: dados
+        });
+
+        if (item.status === "ENCERRADO") {
+            await encerrarEvento(Number(id));
+        }
+
+        res.status(200).json(item);
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const excluir = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        await podeExcluirEvento(Number(id));
+
+        const item = await prisma.eventos.delete({
+            where: { id: Number(id) }
+        });
+
+        res.status(200).json(item);
+
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+module.exports = {
+    cadastrar,
+    listar,
+    buscar,
+    atualizar,
+    excluir
+};
+
+
+uploadimagens: 
+const multer = require("multer");
+
+const validarNomeArquivo = (req, file, callback) => {
+  const nomePublicacao = req.body.nome || "arquivo";
+
+  const nomeFormatado = nomePublicacao.toLowerCase().replaceAll(" ", "-");
+
+  const nomeFinal = Date.now() + "-" + nomeFormatado + ".jpg";
+
+  callback(null, nomeFinal);
+};
+
+const definirDestino = (req, file, callback) => {
+  callback(null, "uploads/temp");
+};
+
+const filtrarExtensao = (req, file, callback) => {
+  if (file.mimetype === "image/jpeg" || file.mimetype === "image/jpg") {
+    callback(null, true);
+  } else {
+    callback(new Error("Apenas imagens JPEG são permitidas"));
+  }
+};
+
+const armazenamento = multer.diskStorage({
+  destination: definirDestino,
+  filename: validarNomeArquivo,
+});
+
+const upload = (req, res, next) => {
+  const filemulter = multer({
+    storage: armazenamento,
+    fileFilter: filtrarExtensao,
+    limits: {
+      fileSize: 5 * 1024 * 1024,
+    },
+  });
+
+  filemulter.single("imagem")(req, res, function (erro) {
+    if (erro) {
+      return res.status(400).json({ erro: erro.message });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ erro: "Arquivo não enviado" });
+    }
+
+    next();
+  });
+};
+
+module.exports = upload;
+
+
+eventos routes:
+const express = require("express");
+
+const router = express.Router();
+
+const { 
+    cadastrar, 
+    listar, 
+    buscar, 
+    atualizar, 
+    excluir, 
+    encerrar} = require("../controllers/eventos.controller");
+
+router.post("/cadastrar", cadastrar); //TESTADO
+router.get("/listar", listar); //TESTADO
+router.get("/buscar/:id", buscar); //TESTADO
+router.put("/atualizar/:id", atualizar); //TESTATO 
+router.delete("/excluir/:id", excluir); //TESTADO
+
+module.exports = router;
+
+faça em formato de index.html, style.css:

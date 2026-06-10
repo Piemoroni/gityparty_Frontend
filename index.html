@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Gestão de Eventos</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+    </style>
+
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+    <!-- HEADER -->
+
+    <header class="bg-white border-b shadow-sm">
+
+        <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+
+            <h1 class="text-3xl font-bold text-red-900">
+                Gestão de Eventos
+            </h1>
+
+            <button
+                onclick="toggleModal('modalCadastro', true)"
+                class="bg-red-900 hover:bg-red-950 text-white px-5 py-3 rounded-xl font-bold"
+            >
+                Novo Evento
+            </button>
+
+        </div>
+
+    </header>
+
+    <!-- MAIN -->
+
+    <main class="max-w-7xl mx-auto p-6">
+
+        <!-- ESTATÍSTICAS -->
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm">
+
+                <p class="text-gray-500">
+                    Eventos
+                </p>
+
+                <h2
+                    id="count-ativos"
+                    class="text-4xl font-bold mt-3"
+                >
+                    0
+                </h2>
+
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm">
+
+                <p class="text-gray-500">
+                    Capacidade Total
+                </p>
+
+                <h2
+                    id="count-capacidade"
+                    class="text-4xl font-bold mt-3"
+                >
+                    0
+                </h2>
+
+            </div>
+
+            <div class="bg-red-900 text-white rounded-2xl p-6 shadow-sm">
+
+                <p>
+                    Próximo Evento
+                </p>
+
+                <h2
+                    id="next-event"
+                    class="text-2xl font-bold mt-3"
+                >
+                    Nenhum
+                </h2>
+
+            </div>
+
+        </div>
+
+        <!-- CARDS -->
+
+        <div
+            id="grid-eventos"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+        ></div>
+
+    </main>
+
+    <!-- MODAL CADASTRO -->
+
+    <div
+        id="modalCadastro"
+        class="hidden fixed inset-0 bg-black/40 items-center justify-center z-50"
+    >
+
+        <div class="bg-white rounded-2xl w-full max-w-lg p-6">
+
+            <div class="flex justify-between items-center mb-6">
+
+                <h2 class="text-2xl font-bold">
+                    Novo Evento
+                </h2>
+
+                <button
+                    onclick="toggleModal('modalCadastro', false)"
+                >
+                    ✕
+                </button>
+
+            </div>
+
+            <form
+                id="formCadastro"
+                class="space-y-4"
+            >
+
+                <input
+                    id="titulo"
+                    type="text"
+                    placeholder="Título"
+                    required
+                    class="w-full border rounded-xl p-3"
+                >
+
+                <textarea
+                    id="descricao"
+                    placeholder="Descrição"
+                    class="w-full border rounded-xl p-3"
+                ></textarea>
+
+                <input
+                    id="data_evento"
+                    type="date"
+                    required
+                    class="w-full border rounded-xl p-3"
+                >
+
+                <input
+                    id="capacidade_maxima"
+                    type="number"
+                    placeholder="Capacidade máxima"
+                    required
+                    class="w-full border rounded-xl p-3"
+                >
+
+                <input
+                    id="local"
+                    type="text"
+                    placeholder="Local"
+                    required
+                    class="w-full border rounded-xl p-3"
+                >
+
+                <select
+                    id="status"
+                    class="w-full border rounded-xl p-3"
+                >
+
+                    <option value="ATIVO">
+                        ATIVO
+                    </option>
+
+                    <option value="CANCELADO">
+                        CANCELADO
+                    </option>
+
+                    <option value="ENCERRADO">
+                        ENCERRADO
+                    </option>
+
+                </select>
+
+                <button
+                    type="submit"
+                    class="w-full bg-red-900 hover:bg-red-950 text-white py-3 rounded-xl font-bold"
+                >
+                    Cadastrar Evento
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- MODAL EDIÇÃO -->
+
+    <div
+        id="modalDetalhes"
+        class="hidden fixed inset-0 bg-black/40 items-center justify-center z-50"
+    >
+
+        <div class="bg-white rounded-2xl w-full max-w-lg p-6">
+
+            <div class="flex justify-between items-center mb-6">
+
+                <h2 class="text-2xl font-bold">
+                    Editar Evento
+                </h2>
+
+                <button
+                    onclick="toggleModal('modalDetalhes', false)"
+                >
+                    ✕
+                </button>
+
+            </div>
+
+            <div class="space-y-4">
+
+                <input
+                    id="editTitulo"
+                    type="text"
+                    placeholder="Título"
+                    class="w-full border rounded-xl p-3"
+                >
+
+                <textarea
+                    id="editDescricao"
+                    placeholder="Descrição"
+                    class="w-full border rounded-xl p-3"
+                ></textarea>
+
+                <input
+                    id="editDataEvento"
+                    type="date"
+                    class="w-full border rounded-xl p-3"
+                >
+
+                <input
+                    id="editCapacidadeMaxima"
+                    type="number"
+                    placeholder="Capacidade máxima"
+                    class="w-full border rounded-xl p-3"
+                >
+
+                <input
+                    id="editLocal"
+                    type="text"
+                    placeholder="Local"
+                    class="w-full border rounded-xl p-3"
+                >
+
+                <select
+                    id="editStatus"
+                    class="w-full border rounded-xl p-3"
+                >
+
+                    <option value="ATIVO">
+                        ATIVO
+                    </option>
+
+                    <option value="CANCELADO">
+                        CANCELADO
+                    </option>
+
+                    <option value="ENCERRADO">
+                        ENCERRADO
+                    </option>
+
+                </select>
+
+                <div class="flex gap-3">
+
+                    <button
+                        id="btn-excluir"
+                        class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold"
+                    >
+                        Excluir
+                    </button>
+
+                    <button
+                        onclick="salvarEdicao()"
+                        class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-bold"
+                    >
+                        Salvar
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
